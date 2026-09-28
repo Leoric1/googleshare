@@ -15,7 +15,7 @@ MAX_DOC_BYTES = int(os.environ.get("MAX_DOC_BYTES", str(2 * 1024 * 1024)))
 # ADK's AuthenticatedFunctionTool injects it at runtime.
 EXTERNAL_API_URL = os.environ.get(
     "EXTERNAL_API_URL",
-    "https://api.openweathermap.org/data/2.5/weather",
+    "https://api.api-ninjas.com/v1/weather",
 )
 
 # Auth Manager — Auth Provider resource name (created via gcloud)

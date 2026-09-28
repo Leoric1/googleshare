@@ -40,9 +40,8 @@ def main() -> None:
 
     # Auth Provider resource name (created by gcloud agent-identity auth-providers create)
     auth_provider_name = os.environ.get("AUTH_PROVIDER_NAME", "")
-    # OpenWeatherMap API Key (fallback for query-param auth, since Auth Manager
-    # injects as HTTP header but OpenWeatherMap expects ?appid= query param)
-    openweather_api_key = os.environ.get("OPENWEATHER_API_KEY", "")
+    # API Ninjas API Key (for Auth Manager — injected as X-Api-Key header)
+    apininjas_api_key = os.environ.get("APININJAS_API_KEY", "")
 
     client = vertexai.Client(
         project=project,
@@ -77,10 +76,9 @@ def main() -> None:
     if auth_provider_name:
         config_dict["env_vars"]["AUTH_PROVIDER_NAME"] = auth_provider_name
 
-    # Pass OpenWeatherMap API Key as env var fallback
-    # (Auth Manager injects as HTTP header, but OpenWeatherMap expects ?appid= query param)
-    if openweather_api_key:
-        config_dict["env_vars"]["OPENWEATHER_API_KEY"] = openweather_api_key
+    # Pass API Ninjas API Key as env var (Auth Manager injects as X-Api-Key header)
+    if apininjas_api_key:
+        config_dict["env_vars"]["APININJAS_API_KEY"] = apininjas_api_key
 
     # Debug: show what env_vars will be passed to Agent Engine
     print(f"  env_vars being passed to Agent Engine:")
