@@ -1,6 +1,6 @@
 """External API tools demonstrating Auth Manager transparent injection.
 
-These tools call external APIs (API Ninjas Weather) that require API key
+These tools call external APIs (API Ninjas) that require API key
 authentication via HTTP header (X-Api-Key). The API key is stored in
 Agent Identity Auth Manager and injected at runtime by ADK's
 AuthenticatedFunctionTool — the function body contains ZERO authentication code.
@@ -45,6 +45,10 @@ def get_weather(city: str) -> dict[str, Any]:
     via Agent Identity Auth Manager as the X-Api-Key HTTP header.
     This function body contains no authentication code whatsoever.
 
+    API Ninjas free tier requires lat/lon for the Weather endpoint,
+    so we first look up the city coordinates via the City endpoint,
+    then query the Weather endpoint with those coordinates.
+
     Args:
       city: City name, e.g. "London", "Beijing", or "San Francisco,CA".
 
@@ -52,8 +56,23 @@ def get_weather(city: str) -> dict[str, Any]:
       On success: {city, temperature_c, condition, humidity, wind_speed, raw}.
       On failure: {error, message} with a human-readable explanation.
     """
-    base_url = config.EXTERNAL_API_URL
-    params = urllib.parse.urlencode({"name": city})
+    base_url = config.EXTERNAL_API_URL  # https://api.api-ninjas.com/v1/weather
+
+    # Step 1: Look up city coordinates via City API
+    city_url = f"https://api.api-ninjas.com/v1/city?{urllib.parse.urlencode({'name': city})}"
+    try:
+        city_req = urllib.request.Request(city_url)
+        with urllib.request.urlopen(city_req) as city_resp:
+            city_data = json.loads(city_resp.read().decode("utf-8"))
+        if not city_data:
+            return {"error": "not_found", "message": f"City '{city}' not found."}
+        lat = city_data[0]["latitude"]
+        lon = city_data[0]["longitude"]
+    except Exception as e:
+        return {"error": "unexpected", "message": f"City lookup failed for '{city}': {type(e).__name__}: {e}"}
+
+    # Step 2: Query weather with coordinates
+    params = urllib.parse.urlencode({"lat": lat, "lon": lon})
     url = f"{base_url}?{params}"
 
     try:
