@@ -8,9 +8,11 @@ AuthenticatedFunctionTool — the function body contains ZERO authentication cod
 Contrast with the traditional approach (AWS-style decorator injection):
 
   # GCP transparent interception — function body has zero auth code
-  async def get_weather(lat, lon):
-      response = await client.get("https://api.api-ninjas.com/v1/weather")
-      return response.json()
+  def get_weather(city):
+      url = f'https://api.api-ninjas.com/v1/weather?name={city}'
+      req = urllib.request.Request(url)
+      with urllib.request.urlopen(req) as resp:
+          return json.loads(resp.read())
 
   get_weather_tool = AuthenticatedFunctionTool(func=get_weather, auth_config=auth_config)
 
@@ -29,7 +31,6 @@ same convention as gcs_tools.py.
 from __future__ import annotations
 
 import json
-import os
 import urllib.parse
 import urllib.request
 from typing import Any
@@ -52,20 +53,11 @@ def get_weather(city: str) -> dict[str, Any]:
       On failure: {error, message} with a human-readable explanation.
     """
     base_url = config.EXTERNAL_API_URL
-    # API Ninjas free tier requires lat/lon, so we use a simple geocoding approach
-    # by passing the city name as a query parameter to the weather endpoint.
-    # API Ninjas also supports city lookup via the /v1/city endpoint.
-    params = urllib.parse.urlencode({"name": city, "country": ""})
+    params = urllib.parse.urlencode({"name": city})
     url = f"{base_url}?{params}"
 
     try:
         req = urllib.request.Request(url)
-        # Auth Manager transparently injects API Key as X-Api-Key HTTP header.
-        # Fallback: read API key from env var if Auth Manager didn't inject it
-        # (e.g., when running locally without AuthenticatedFunctionTool support).
-        api_key = os.environ.get("APININJAS_API_KEY", "")
-        if api_key:
-            req.add_header("X-Api-Key", api_key)
         with urllib.request.urlopen(req) as resp:
             data = json.loads(resp.read().decode("utf-8"))
         return {
@@ -126,5 +118,5 @@ try:
 except ImportError:
     # ADK version doesn't support AuthenticatedFunctionTool yet.
     # Fall back to raw function — works for local testing, but without
-    # transparent credential injection. API key read from env var fallback.
+    # transparent credential injection.
     get_weather_tool = get_weather
