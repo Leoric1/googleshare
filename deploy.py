@@ -40,6 +40,9 @@ def main() -> None:
 
     # Auth Provider resource name (created by gcloud agent-identity auth-providers create)
     auth_provider_name = os.environ.get("AUTH_PROVIDER_NAME", "")
+    # API Ninjas API Key (stored in Auth Manager, passed as env var fallback
+    # since current ADK version doesn't expose AuthenticatedFunctionTool)
+    apininjas_api_key = os.environ.get("APININJAS_API_KEY", "")
 
     client = vertexai.Client(
         project=project,
@@ -73,6 +76,11 @@ def main() -> None:
     # Pass Auth Provider name so external_tools.py can wrap with AuthenticatedFunctionTool
     if auth_provider_name:
         config_dict["env_vars"]["AUTH_PROVIDER_NAME"] = auth_provider_name
+
+    # Pass API Ninjas API Key as env var (stored in Auth Manager,
+    # passed as fallback since current ADK doesn't expose AuthenticatedFunctionTool)
+    if apininjas_api_key:
+        config_dict["env_vars"]["APININJAS_API_KEY"] = apininjas_api_key
 
     # Debug: show what env_vars will be passed to Agent Engine
     print(f"  env_vars being passed to Agent Engine:")

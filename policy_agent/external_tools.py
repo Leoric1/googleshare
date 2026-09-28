@@ -31,6 +31,7 @@ same convention as gcs_tools.py.
 from __future__ import annotations
 
 import json
+import os
 import urllib.parse
 import urllib.request
 from typing import Any
@@ -58,10 +59,20 @@ def get_weather(city: str) -> dict[str, Any]:
     """
     base_url = config.EXTERNAL_API_URL  # https://api.api-ninjas.com/v1/weather
 
+    # ── NOTE: Auth Manager transparent injection ──────────────────────────────
+    # In production with ADK Agent Identity support, the API key would be
+    # injected by AuthenticatedFunctionTool as the X-Api-Key header.
+    # Current ADK version doesn't expose AuthenticatedFunctionTool, so we
+    # read from env var as fallback. The API key is still stored in Auth
+    # Manager and passed via env_vars — it never appears in agent source code.
+    api_key = os.environ.get("APININJAS_API_KEY", "")
+
     # Step 1: Look up city coordinates via City API
     city_url = f"https://api.api-ninjas.com/v1/city?{urllib.parse.urlencode({'name': city})}"
     try:
         city_req = urllib.request.Request(city_url)
+        if api_key:
+            city_req.add_header("X-Api-Key", api_key)
         with urllib.request.urlopen(city_req) as city_resp:
             city_data = json.loads(city_resp.read().decode("utf-8"))
         if not city_data:
@@ -77,6 +88,8 @@ def get_weather(city: str) -> dict[str, Any]:
 
     try:
         req = urllib.request.Request(url)
+        if api_key:
+            req.add_header("X-Api-Key", api_key)
         with urllib.request.urlopen(req) as resp:
             data = json.loads(resp.read().decode("utf-8"))
         return {
