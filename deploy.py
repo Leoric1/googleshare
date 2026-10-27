@@ -56,7 +56,8 @@ def main() -> None:
         "display_name": display_name,
         "identity_type": types.IdentityType.AGENT_IDENTITY,
         "requirements": [
-            "google-cloud-aiplatform[adk,agent_engines]",
+            "google-adk==2.7.1",
+            "google-cloud-aiplatform[agent_engines]",
             "google-cloud-storage>=2.18.0",
             "google-cloud-secret-manager>=2.20.0",
             "pydantic>=2.7.0",

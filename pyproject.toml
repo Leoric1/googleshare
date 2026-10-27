@@ -5,7 +5,7 @@ description = "Extended ADK agent demo: policy lookup from GCS + weather from Op
 requires-python = ">=3.10"
 dependencies = [
   "google-cloud-aiplatform[adk,agent_engines]>=1.95.0",
-  "google-adk>=1.0.0",
+  "google-adk==2.7.1",
   "google-cloud-storage>=2.18.0",
   "google-cloud-secret-manager>=2.20.0",
   "google-auth>=2.35.0",
